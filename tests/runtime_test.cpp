@@ -7,6 +7,7 @@ void run(unsigned ms){auto start=millis();while(uint32_t(millis()-start)<ms)loop
 int main(){
  setup();assert(autopilot.baud==115200);run(3500);
  assert(!Config::SIMULATE_DISTANCE && sent>=174 && !locked);
+ assert(status.lidarHz==0 && status.txHz>=49 && status.txHz<=51);
  const std::vector<uint8_t> zero={0x59,0x59,0,0,0,0,0,0,0xB2};
  for(const auto &p:autopilot.tx)assert(p==zero);
  autopilot.tx.clear();
@@ -33,6 +34,10 @@ int main(){
  for(int i=0;i<5;++i)inject(234);
  run(20);assert(locked&&sent>before);
  autopilot.rx={1,2,3};loop();assert(status.fcRxBytes==3);
+ for(int i=0;i<2200;++i)inject(234);
+ assert(status.lidarHz>990 && status.lidarHz<1010 && status.txHz>=49 && status.txHz<=51);
+ autopilot.room=0;run(2200);assert(status.lidarHz==0 && status.txHz==0);
+ autopilot.room=512;run(2200);assert(status.txHz>=49 && status.txHz<=51);
  LrfParser check;
  for(unsigned cm=0;cm<65536;++cm){uint16_t value=0;check.reset();check.feed(0x5C,value);check.feed(cm&255,value);check.feed(cm>>8,value);assert(check.feed(uint8_t(~((cm&255)+(cm>>8))),value)==ParseResult::Good);assert(value==cm);}
  Measurement m;m.accept(100,0xFFFFFFF0,5,5000);assert(m.fresh(4,250));assert(!m.fresh(300,250));

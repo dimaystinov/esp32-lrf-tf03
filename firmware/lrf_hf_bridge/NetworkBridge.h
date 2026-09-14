@@ -3,7 +3,7 @@
 struct DeviceStatus {
   uint32_t uptime=0,lidarBaud=0,sampleTime=0;
   uint16_t cm=0;
-  float lidarHz=0;
+  float lidarHz=0,txHz=0;
   bool locked=false,fresh=false;
   uint32_t good=0,bad=0,rejected=0,sent=0,txDrop=0,fcRxBytes=0;
 };

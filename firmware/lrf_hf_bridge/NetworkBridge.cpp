@@ -55,7 +55,7 @@ static String lidarJson(uint32_t now) {
   return s;
 }
 static String fcJson(uint32_t) {
-  return String("{\"protocol\":\"TF03\",\"connected\":null,\"accepted\":null,\"ack_supported\":false,\"tx_frames\":") + device.sent +
+  return String("{\"protocol\":\"TF03\",\"connected\":null,\"accepted\":null,\"ack_supported\":false,\"tx_frames\":") + device.sent + ",\"tx_rate_hz\":" + num(device.txHz,true,1) +
     ",\"tx_dropped\":" + device.txDrop + ",\"rx_bytes\":" + device.fcRxBytes + ",\"baud\":" + Config::FC_BAUD + "}";
 }
 static String statusJson() {

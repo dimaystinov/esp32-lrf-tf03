@@ -85,10 +85,11 @@ void loop() {
     if (sendPacket(packet,sizeof(packet))) ++sent;
   }
   static uint32_t lastSnapshot=0;
-  static uint32_t lastRate=0, previousGood=0;
+  static uint32_t lastRate=0, previousGood=0, previousSent=0;
   if (uint32_t(now-lastRate)>=1000) {
     status.lidarHz=(goodFrames-previousGood)*1000.0f/uint32_t(now-lastRate);
-    lastRate=now; previousGood=goodFrames;
+    status.txHz=(sent-previousSent)*1000.0f/uint32_t(now-lastRate);
+    lastRate=now; previousGood=goodFrames; previousSent=sent;
   }
   if (uint32_t(now-lastSnapshot)>=20) {
     lastSnapshot=now; status.uptime=now; status.lidarBaud=Config::BAUDS[baudIndex];
