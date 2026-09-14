@@ -7,6 +7,7 @@ constexpr int LIDAR_TX = 7;  // Blue sensor RX (no commands sent)
 constexpr int FC_TX = 10;   // To flight controller RX
 constexpr int FC_RX = 3;    // From flight controller TX
 constexpr uint16_t HTTP_PORT = 80;
+constexpr uint32_t WIFI_AUTO_OFF_MS = 5 * 60 * 1000;
 constexpr uint32_t FC_BAUD = 115200;
 constexpr bool SIMULATE_DISTANCE = false;  // Bench test only; disable before real operation
 constexpr uint16_t SIMULATED_CM = 15000;

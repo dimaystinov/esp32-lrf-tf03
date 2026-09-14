@@ -20,7 +20,11 @@ static NetworkServer httpServer(Config::HTTP_PORT);
 static NetworkClient httpClient;
 static DNSServer dnsServer;
 static constexpr const char *dnsName="legion.lidar";
-static bool apActive=false,serversStarted=false;
+static bool apActive=false,serversStarted=false,wifiExpired=false;
+static uint32_t wifiRemainingMs() {
+  const uint32_t now=millis();
+  return wifiExpired || now>=Config::WIFI_AUTO_OFF_MS ? 0 : Config::WIFI_AUTO_OFF_MS-now;
+}
 static String httpRequest,httpResponse;
 static size_t httpOffset=0;
 static uint32_t httpStart=0;
@@ -67,6 +71,18 @@ static String statusJson() {
     ",\"ssid\":"+quoted(Secrets::AP_SSID)+",\"ap_ip\":"+quoted(WiFi.softAPIP().toString())+",\"dns_name\":"+quoted(dnsName)+",\"dns_enabled\":"+boolean(dnsServer.isUp())+",\"clients\":"+WiFi.softAPgetStationNum()+"},\"lidar\":"+lidarJson(millis())+",\"fc\":"+fcJson(millis())+"}";
 }
 static void serviceWifi() {
+  if (wifiExpired) return;
+  if (!wifiRemainingMs()) {
+    // Latch until reboot: do not let the AP retry logic restart Wi-Fi.
+    wifiExpired=true;
+    httpClient.stop(); httpServer.end(); serversStarted=false;
+    dnsServer.stop(); MDNS.end();
+    WiFi.mode(WIFI_OFF); apActive=false;
+    portENTER_CRITICAL(&guard);
+    snprintf(netSummary,sizeof(netSummary),"AP=OFF auto-off=300s; TF03 continues; reboot to enable Wi-Fi");
+    portEXIT_CRITICAL(&guard);
+    return;
+  }
   static uint32_t lastAttempt=0;
   if (!apActive && (!lastAttempt || uint32_t(millis()-lastAttempt)>=5000)) {
     lastAttempt=millis(); WiFi.mode(WIFI_AP);
