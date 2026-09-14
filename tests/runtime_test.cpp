@@ -24,15 +24,16 @@ int main(){
  autopilot.room=0;run(100);assert(dropped>0);before=sent;
  autopilot.room=512;inject(123);run(30);assert(sent>before);
  run(300);before=sent;run(100);assert(sent>=before+5);assert(autopilot.tx.back()==zero);
- for(uint16_t cm : {uint16_t(5001),uint16_t(10000),uint16_t(15000)}) {
+ for(uint16_t cm : {uint16_t(5001),uint16_t(10000),uint16_t(15000),uint16_t(15001),uint16_t(50000)}) {
   inject(cm);run(20);
   const auto &frame=autopilot.tx.back();
   assert(frame[2]==uint8_t(cm) && frame[3]==uint8_t(cm>>8));
   unsigned checksum=0;for(unsigned i=0;i<8;++i)checksum+=frame[i];
   assert(frame[8]==uint8_t(checksum));
  }
- inject(15001);run(20);assert(autopilot.tx.back()==zero);
- inject(65535);run(30);assert(autopilot.tx.back()==zero);
+ inject(50001);run(20);assert(autopilot.tx.back()==zero);
+ inject(65535);run(20);assert(autopilot.tx.back()==zero);
+ inject(4);run(30);assert(autopilot.tx.back()==zero);
  inject(123);run(20);assert(autopilot.tx.back()==expected);
  lidar.rx={0x5C,0x7B,0,0};loop();run(20);assert(autopilot.tx.back()==zero);
  for(int i=0;i<5;++i)inject(123);

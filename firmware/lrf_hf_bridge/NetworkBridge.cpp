@@ -67,7 +67,7 @@ static String fcJson(uint32_t) {
 }
 static String statusJson() {
   xQueuePeek(snapshots,&device,0);
-  return String("{\"firmware\":\"3.0.0\",\"uptime_ms\":")+millis()+",\"output_protocol\":\"TF03\",\"wifi\":{\"ap_enabled\":"+boolean(apActive)+
+  return String("{\"firmware\":\"3.1.0\",\"uptime_ms\":")+millis()+",\"output_protocol\":\"TF03\",\"wifi\":{\"ap_enabled\":"+boolean(apActive)+
     ",\"ssid\":"+quoted(Secrets::AP_SSID)+",\"ap_ip\":"+quoted(WiFi.softAPIP().toString())+",\"dns_name\":"+quoted(dnsName)+",\"dns_enabled\":"+boolean(dnsServer.isUp())+",\"clients\":"+WiFi.softAPgetStationNum()+"},\"lidar\":"+lidarJson(millis())+",\"fc\":"+fcJson(millis())+"}";
 }
 static void serviceWifi() {
