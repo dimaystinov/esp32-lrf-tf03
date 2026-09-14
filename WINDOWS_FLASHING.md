@@ -62,6 +62,6 @@ arduino-cli monitor --port COM5 --config baudrate=115200
 
 ## Проверка после прошивки
 
-Подключитесь к Wi-Fi `lidar_bridge`, откройте `http://192.168.4.1`. Без USB программа продолжает работать от подходящего внешнего питания. Выход TF03: GPIO10, 115200 8N1, 50 Гц; при потере данных 0 см. Настройка полётника выполняется отдельно. Для реальных измерений в Config.h должно быть `SIMULATE_DISTANCE = false`.
+Подключитесь к Wi-Fi `lidar_bridge`, откройте `http://legion.lidar` (резервный адрес `http://192.168.4.1`). После обновления переподключитесь к Wi-Fi для получения DNS. Без USB программа продолжает работать от подходящего внешнего питания. Выход TF03: GPIO10, 115200 8N1, 50 Гц; при потере данных 0 см. Настройка полётника выполняется отдельно. Для реальных измерений в Config.h должно быть `SIMULATE_DISTANCE = false`.
 
 Инструкция сверена с [установкой Arduino-ESP32](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html) и [описанием меню платы](https://docs.espressif.com/projects/arduino-esp32/en/latest/guides/tools_menu.html). Сборка проверена на macOS; физическая прошивка с Windows пока не проверялась.

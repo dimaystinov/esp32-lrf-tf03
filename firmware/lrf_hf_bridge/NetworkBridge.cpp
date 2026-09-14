@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <DNSServer.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #include <lwip/sockets.h>
@@ -17,6 +18,8 @@ static char netSummary[150]="network starting";
 static DeviceStatus device;
 static NetworkServer httpServer(Config::HTTP_PORT);
 static NetworkClient httpClient;
+static DNSServer dnsServer;
+static constexpr const char *dnsName="legion.lidar";
 static bool apActive=false,serversStarted=false;
 static String httpRequest,httpResponse;
 static size_t httpOffset=0;
@@ -61,21 +64,29 @@ static String fcJson(uint32_t) {
 static String statusJson() {
   xQueuePeek(snapshots,&device,0);
   return String("{\"firmware\":\"3.0.0\",\"uptime_ms\":")+millis()+",\"output_protocol\":\"TF03\",\"wifi\":{\"ap_enabled\":"+boolean(apActive)+
-    ",\"ssid\":"+quoted(Secrets::AP_SSID)+",\"ap_ip\":"+quoted(WiFi.softAPIP().toString())+",\"clients\":"+WiFi.softAPgetStationNum()+"},\"lidar\":"+lidarJson(millis())+",\"fc\":"+fcJson(millis())+"}";
+    ",\"ssid\":"+quoted(Secrets::AP_SSID)+",\"ap_ip\":"+quoted(WiFi.softAPIP().toString())+",\"dns_name\":"+quoted(dnsName)+",\"dns_enabled\":"+boolean(dnsServer.isUp())+",\"clients\":"+WiFi.softAPgetStationNum()+"},\"lidar\":"+lidarJson(millis())+",\"fc\":"+fcJson(millis())+"}";
 }
 static void serviceWifi() {
   static uint32_t lastAttempt=0;
   if (!apActive && (!lastAttempt || uint32_t(millis()-lastAttempt)>=5000)) {
     lastAttempt=millis(); WiFi.mode(WIFI_AP);
-    apActive=WiFi.softAP(Secrets::AP_SSID,Secrets::AP_PASSWORD);
+    const IPAddress apIP(192,168,4,1);
+    apActive=WiFi.softAPConfig(apIP,apIP,IPAddress(255,255,255,0),IPAddress(192,168,4,2),apIP) &&
+      WiFi.softAP(Secrets::AP_SSID,Secrets::AP_PASSWORD);
     if (apActive) {
       WiFi.setTxPower(WIFI_POWER_8_5dBm);
       MDNS.begin("lidar-bridge"); MDNS.addService("http","tcp",Config::HTTP_PORT);
     }
   }
+  static uint32_t lastDnsAttempt=0;
+  if (apActive && !dnsServer.isUp() && (!lastDnsAttempt || uint32_t(millis()-lastDnsAttempt)>=5000)) {
+    lastDnsAttempt=millis();
+    dnsServer.setTTL(60);
+    dnsServer.start(53,dnsName,WiFi.softAPIP());
+  }
   if (apActive && !serversStarted) { httpServer.begin(); serversStarted=true; }
   char text[150];
-  snprintf(text,sizeof(text),"AP=%s IP=%s clients=%u",apActive?"ON":"STARTING",WiFi.softAPIP().toString().c_str(),WiFi.softAPgetStationNum());
+  snprintf(text,sizeof(text),"AP=%s IP=%s clients=%u DNS=%s",apActive?"ON":"STARTING",WiFi.softAPIP().toString().c_str(),WiFi.softAPgetStationNum(),dnsServer.isUp()?dnsName:"STARTING");
   portENTER_CRITICAL(&guard); memcpy(netSummary,text,sizeof(netSummary)); portEXIT_CRITICAL(&guard);
 }
 // Nonblocking socket writes: one slow browser or GCS cannot stall network service.
